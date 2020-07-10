@@ -1,0 +1,30 @@
+---
+# Defaults file for vmware
+
+# Hardware defaults
+size: small
+vmw_datacenter: ACME
+vmw_vm_folder: demo
+vmw_vm_name: ''
+vmw_vm_state: poweredon
+vmw_vm_template: tmpl_centos_7
+vmw_vm_network: VM Network
+vmw_vm_memory: 1024
+vmw_vm_num_cpu: 1
+vmw_vm_num_cores: 1
+vmw_datastore: datastore2
+vmw_vm_dns: 1.1.1.1
+vmw_vcenter_spec: centos
+
+# Logical defaults
+vmw_project: project_A1
+vmw_role: webserver
+vmw_env: demo
+vmw_service: app1
+vmw_count: 1
+
+# vCenter Controls
+vmw_vcenter_ssl: no
+vmw_vcenter_category: urn:vmomi:InventoryServiceCategory:f32eb996-152e-4c87-a248-f4e130f2cc9e:GLOBAL
+
+

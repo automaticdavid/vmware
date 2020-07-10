@@ -1,0 +1,84 @@
+
+- name: Load sizes
+  include_vars:
+    name: tshirt
+    file: defaults/sizes.yml
+    
+- name: Select VM size
+  set_fact:
+    size: "{{ tshirt[vmw_vm_size] }}"
+
+- name: Create an environement folder on given datacenter
+  vcenter_folder: 
+    validate_certs: "{{ vmw_vcenter_ssl }}"
+    datacenter: "{{ vmw_datacenter }}"
+    folder_name: "{{ vmw_env }}"
+    folder_type: vm
+    state: present
+  delegate_to: localhost
+  run_once: true
+
+
+- name: Create a VM folder on given datacenter
+  vcenter_folder: 
+    validate_certs: "{{ vmw_vcenter_ssl }}"
+    datacenter: "{{ vmw_datacenter }}"
+    folder_name: "{{ vmw_vm_folder }}"
+    parent_folder: "{{ vmw_env }}"
+    state: present
+  delegate_to: localhost
+  run_once: true
+
+- name: "Service: {{ vmw_service }}, Create VM: {{ vmw_vm_name }}"
+  vmware_guest:
+    validate_certs: "{{ vmw_vcenter_ssl }}"
+    datacenter: "{{ vmw_datacenter }}"
+    folder: "{{ vmw_env }}/{{ vmw_vm_folder }}"
+    name: "{{ vmw_vm_name }}"
+    state: "{{ vmw_vm_state }}"
+    template: "{{ vmw_vm_template }}"
+    hardware:
+      memory_mb: "{{ size.vmw_vm_memory }}"
+      num_cpus: "{{ size.vmw_vm_num_cpu }}"
+      num_cpu_cores_per_socket: "{{ size.vmw_vm_num_cores }}"
+      scsi: paravirtual
+      hotadd_cpu: True
+      hotremove_cpu: True
+      hotadd_memory: False
+    networks:
+    - name: "{{ vmw_vm_network }}"
+      start_connected: True
+      type: dhcp
+    annotation: "Created with Ansible for: {{ vmw_role }}_{{ vmw_project }}"
+    wait_for_ip_address: yes
+    customization_spec: "{{ vmw_vcenter_spec }}" 
+  delegate_to: localhost
+  register: result_vm
+
+- name: Create tags if needed
+  vmware_tag:
+    validate_certs: "{{ vmw_vcenter_ssl }}"
+    tag_name: "{{ my_tag }}"
+    state: present
+    category_id: "{{ vmw_vcenter_category }}"
+  delegate_to: localhost
+  run_once: true
+  loop:
+    - "{{ vmw_project }}"
+    - "{{ vmw_role }}"
+    - "{{ vmw_env }}"
+    - "{{ vmw_service }}"
+  loop_control:
+    loop_var: my_tag
+
+- name: "Service: {{ vmw_service }}, Add tags to VM: {{ vmw_vm_name }}"
+  vmware_tag_manager:
+    tag_names:
+      - "{{ vmw_project }}"
+      - "{{ vmw_role }}"
+      - "{{ vmw_env }}"
+      - "{{ vmw_service }}"
+    object_name: "{{ vmw_vm_name }}"
+    object_type: VirtualMachine
+    state: set
+  delegate_to: localhost

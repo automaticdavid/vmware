@@ -1,0 +1,4 @@
+---
+# tasks file for vmware
+- name: 'Including VMware create tasks'
+  include_tasks: vmware_create.yml
